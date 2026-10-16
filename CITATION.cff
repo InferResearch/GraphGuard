@@ -7,5 +7,5 @@ authors:
     given-names: "Hanyu"
   - family-names: "Liang"
     given-names: "Xun"
-repository-code: "https://github.com/MarrytheToilet/GraphGuard"
+repository-code: "https://github.com/InferResearch/GraphGuard"
 version: "0.1.0"
