@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from graphguard.cross_document import (
+    CDRInputs,
     CrossDocumentKuzuGraph,
     build_cross_document_cohort,
     execute_cross_document_query,
@@ -101,11 +102,75 @@ def _package_fixture(directory: Path, *, stale_sha: bool = False):
 
 
 def _registered_inputs():
+    missing = [
+        str(path.relative_to(ROOT))
+        for path in (RAW, DB)
+        if not path.is_file()
+    ]
+    if missing:
+        pytest.skip(
+            "registered-cohort integration inputs unavailable: "
+            + ", ".join(missing)
+        )
     return load_cdr_inputs(
         raw_path=RAW,
         db_path=DB,
         samples_path=SAMPLES,
         run_id=RUN,
+    )
+
+
+@pytest.fixture
+def joint_inputs():
+    """Small linked graphs for checks that do not require the original corpus."""
+    document_ids = tuple(f"doc-{index}" for index in range(4))
+    documents = {}
+    local_to_mesh = {}
+    mesh_registry = {}
+    gold_by_document = {}
+    for index, document_id in enumerate(document_ids):
+        entities = [
+            {
+                "entity_id": f"{document_id}::e0",
+                "mesh_id": "C-shared",
+                "canonical_name": "Compound",
+                "entity_type": "Chemical",
+            },
+            {
+                "entity_id": f"{document_id}::e1",
+                "mesh_id": f"D-{index}",
+                "canonical_name": f"Condition {index}",
+                "entity_type": "Disease",
+            },
+        ]
+        documents[document_id] = {
+            "entities": entities,
+            "sentences": [{"text": f"Compound induces condition {index}."}],
+        }
+        for entity in entities:
+            mesh_id = entity["mesh_id"]
+            local_to_mesh[entity["entity_id"]] = mesh_id
+            registry = mesh_registry.setdefault(
+                mesh_id,
+                {
+                    "names": [entity["canonical_name"]],
+                    "types": [entity["entity_type"]],
+                    "documents": [],
+                },
+            )
+            registry["documents"].append(document_id)
+        gold_by_document[document_id] = frozenset(
+            {("C-shared", "CID", f"D-{index}", document_id)}
+        )
+    return CDRInputs(
+        document_ids=document_ids,
+        documents=documents,
+        local_to_mesh=local_to_mesh,
+        mesh_registry=mesh_registry,
+        gold_by_document=gold_by_document,
+        base_by_document=gold_by_document,
+        base_event_by_document={doc: f"base-{doc}" for doc in document_ids},
+        mapping_audit={},
     )
 
 
@@ -166,8 +231,17 @@ def test_registered_mesh_mapping_and_cohort_are_deterministic():
     assert all(packet["active_queries"] for packet in first)
 
 
-def test_joint_prompt_swap_changes_only_document_block_order():
-    inputs = _registered_inputs()
+def test_cohort_selection_is_deterministic_and_document_disjoint(joint_inputs):
+    first = build_cross_document_cohort(joint_inputs, n_packets=2)
+    second = build_cross_document_cohort(joint_inputs, n_packets=2)
+    assert first == second
+    documents = [doc for packet in first for doc in packet["documents"]]
+    assert len(documents) == len(set(documents)) == 4
+    assert all(packet["active_queries"] == ["crossdoc_fanout"] for packet in first)
+
+
+def test_joint_prompt_swap_changes_only_document_block_order(joint_inputs):
+    inputs = joint_inputs
     packet = build_cross_document_cohort(inputs, n_packets=1)[0]
     prompt_ab = render_joint_prompt(inputs, packet, order="ab")
     prompt_ba = render_joint_prompt(inputs, packet, order="ba")
@@ -181,8 +255,8 @@ def test_joint_prompt_swap_changes_only_document_block_order():
     assert registry_ab == registry_ba
 
 
-def test_joint_normalizer_rejects_wrong_provenance_and_direction():
-    inputs = _registered_inputs()
+def test_joint_normalizer_rejects_wrong_provenance_and_direction(joint_inputs):
+    inputs = joint_inputs
     packet = build_cross_document_cohort(inputs, n_packets=1)[0]
     document_id = packet["documents"][0]
     entities = inputs.documents[document_id]["entities"]

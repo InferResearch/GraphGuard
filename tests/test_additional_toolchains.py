@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -247,13 +249,36 @@ def test_neo4j_mode_records_non_thinking_control():
     )
 
 
-def test_load_doc_by_id_selects_the_requested_failure_probe():
+def test_load_doc_by_id_selects_the_requested_failure_probe(tmp_path, monkeypatch):
     module = load_script()
     doc_id = "docred-validation-000004-Conrad_O__Johnson"
-    selected_id, raw, sentences = module.load_doc_by_id(doc_id)
+    sentences = ["A teacher founded a band.", "The band performed locally."]
+    raw = " ".join(sentences)
+    database = tmp_path / "documents.db"
+    with closing(sqlite3.connect(database)) as connection:
+        connection.executescript(
+            "CREATE TABLE documents (document_id TEXT PRIMARY KEY, raw_text TEXT);"
+            "CREATE TABLE sentences "
+            "(document_id TEXT, sentence_index INTEGER, text TEXT);"
+        )
+        connection.executemany(
+            "INSERT INTO documents VALUES (?, ?)",
+            [("other-document", "Unrelated text."), (doc_id, raw)],
+        )
+        connection.executemany(
+            "INSERT INTO sentences VALUES (?, ?, ?)",
+            [
+                (doc_id, 1, sentences[1]),
+                ("other-document", 0, "Unrelated text."),
+                (doc_id, 0, sentences[0]),
+            ],
+        )
+        connection.commit()
+    monkeypatch.setattr(module, "DB", database)
+    selected_id, selected_raw, selected_sentences = module.load_doc_by_id(doc_id)
     assert selected_id == doc_id
-    assert raw
-    assert sentences
+    assert selected_raw == raw
+    assert selected_sentences == sentences
 
 
 def test_analyze_only_defaults_to_published_checkpoint(monkeypatch):

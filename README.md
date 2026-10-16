@@ -43,6 +43,8 @@ uv run python scripts/verify_paper_results.py
 
 The last command checks the committed result artifacts and headline claims without raw corpora, local lineage databases, or API credentials.
 
+The registered-cohort integration test also needs the local BC5CDR corpus and lineage database. Pytest reports a skip when those inputs are absent; the other tests run from the checkout alone.
+
 For maintainers with the seven local lineage databases:
 
 ```bash
