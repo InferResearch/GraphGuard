@@ -1,4 +1,4 @@
-# Drift Contracts for Stochastic Graph Views Extracted by LLMs [Experiment, Analysis & Benchmark]
+# Drift Contracts for Stochastic Graph Views Extracted by LLMs
 
 GraphGuard is the implementation and reproducibility artifact for this paper. It treats graphs extracted by large language models as persistent materialized views and checks whether their structure and query answers remain stable under declared extraction-configuration changes.
 
@@ -66,6 +66,8 @@ Three files provide the main evidence index:
 - `reports/cross_run/reproducibility_manifest.json` records the registered runs and stochastic baselines.
 - `reports/cross_run/sampled_document_ids.json` records the exact document samples.
 - `reports/cross_run/deployment_evidence.json` indexes the RQ8–RQ10 workload and gate artifacts.
+
+Git keeps the scripts, configurations, dependency lockfile, data checksums, result reports, sanitized checkpoints, and figure assets. Credentials, downloaded corpora, local databases, caches, logs, and manuscript files are ignored; the setup steps below recreate the required local inputs.
 
 ## Result-to-script map
 

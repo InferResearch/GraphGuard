@@ -1,9 +1,11 @@
 # ---------- Secrets ----------
 .env
-.env.backup_*
-.env.local
+.env.*
+!.env.example
 *.pem
 *.key
+.netrc
+.pypirc
 
 # ---------- Python ----------
 __pycache__/
@@ -13,45 +15,70 @@ __pycache__/
 build/
 dist/
 .eggs/
-.venv/
+.venv*/
 venv/
 env/
+.cache/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.tox/
+.nox/
+.hypothesis/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
+junit.xml
 
 # ---------- Editors ----------
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.#*
+\#*#
+*.orig
 .DS_Store
+._*
+Thumbs.db
+Desktop.ini
 
 # ---------- Notebooks ----------
 .ipynb_checkpoints/
 
 # ---------- Project: generated data ----------
 *.db
+*.db-journal
+*.db-shm
+*.db-wal
 *.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
 *.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
 # Raw corpora must be downloaded; processed runs and caches are regenerated.
-data/raw/
-data/cache/
-data/archive/
-data/processed/
-data/processed/**
+/data/raw/
+/data/cache/
+/data/archive/
+/data/processed/*
 
-# Allow lightweight stubs / READMEs inside data/
-!data/README.md
-!data/processed/README.md
+# Keep data documentation visible without publishing processed run contents.
+!/data/processed/README.md
+# data/CHECKSUMS.sha256 remains tracked.
 
 # ---------- Project: logs ----------
 logs/
+nohup.out
+*.pid
+*.pid.lock
 
 # ---------- Project: pyvis HTML viewer assets (vendored) ----------
-lib/
+/lib/
 
 # ---------- Manuscript (kept out of the public repo) ----------
 paper/
@@ -62,17 +89,26 @@ paper/
 *.out
 *.toc
 *.synctex.gz
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+*.xdv
 
-# Uncompressed local copies of the registered deployment evidence.  The public,
-# hash-indexed transport uses deterministic .json.gz files instead.
-reports/cross_run/deployment_q1q4_*.json
-!reports/cross_run/deployment_q1q4_docred__deepseek-v4-flash__300d__kuzu_parity.json
-!reports/cross_run/deployment_q1q4_redocred__deepseek-v4-flash__300d__kuzu_parity.json
-!reports/cross_run/deployment_q1q4_scierc__deepseek-v4-flash__100d__kuzu_parity.json
-!reports/cross_run/deployment_q1q4_cdr__deepseek-v4-flash__300d__kuzu_parity.json
-reports/cross_run/deployment_downstream_*.json
-reports/cross_run/deployment_kuzu_cohort_*.json
+# ---------- Project: local deployment evidence copies ----------
+# Public evidence uses .json.gz; keep the separate Kuzu parity reports as JSON.
+/reports/cross_run/deployment_q1q4_*.json
+!/reports/cross_run/deployment_q1q4_*__kuzu_parity.json
+/reports/cross_run/deployment_downstream_*.json
+/reports/cross_run/deployment_kuzu_cohort_*.json
+# Do not blanket-ignore reports/, JSON/JSONL checkpoints, archives, or figures:
+# these include the committed inputs needed for offline result verification.
 
 # ---------- Misc ----------
+/tmp/
+/temp/
 *.tmp
 *.bak
