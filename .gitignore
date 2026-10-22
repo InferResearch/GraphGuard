@@ -77,9 +77,6 @@ nohup.out
 *.pid
 *.pid.lock
 
-# ---------- Project: pyvis HTML viewer assets (vendored) ----------
-/lib/
-
 # ---------- Manuscript (kept out of the public repo) ----------
 paper/
 *.aux

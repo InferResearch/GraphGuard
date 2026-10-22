@@ -172,6 +172,11 @@ def main():
         "budgets": BUDGETS,
         "datasets": {ds: {m: agg[ds][m].tolist() for m in agg[ds]} for ds in agg},
     }, indent=2) + "\n")
+    make_figure(agg)
+
+
+def make_figure(agg):
+    """Render cached planner results without rerunning the planner."""
     # Native single-column canvas so fonts render ~1:1 in the PDF.
     gg_style.apply_rc(font_size=7)
     fig, axes = plt.subplots(1, 4, figsize=(3.5, 0.62), sharey=True,

@@ -13,6 +13,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from zipfile import ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,17 @@ def load_json(relative: str):
 
 def compact(text: str) -> str:
     return re.sub(r"\s+", " ", text)
+
+
+def read_source(path: Path) -> str:
+    """Read current sources, or the response retained in the revision archive."""
+    if path.is_file():
+        return path.read_text(encoding="utf-8")
+    archive = ROOT / "paper" / "archives" / "revision.zip"
+    if path == ROOT / "paper" / "response.tex" and archive.is_file():
+        with ZipFile(archive) as package:
+            return package.read("revision/response.tex").decode("utf-8")
+    raise FileNotFoundError(path)
 
 
 def require_fragment(text: str, fragment: str, context: str) -> None:
@@ -181,7 +193,7 @@ def verify_cross_document_text() -> None:
     seed = summary["comparisons"]["seed"]
     main = compact((ROOT / "paper" / "main.tex").read_text(encoding="utf-8"))
     response = compact(
-        (ROOT / "paper" / "response.tex").read_text(encoding="utf-8")
+        read_source(ROOT / "paper" / "response.tex")
     )
 
     main_table = compact(
@@ -340,7 +352,7 @@ def family_expected_rows() -> dict[str, tuple[str, ...]]:
 
 
 def verify_family_table(path: Path) -> None:
-    tex = compact(path.read_text(encoding="utf-8"))
+    tex = compact(read_source(path))
     for label, values in family_expected_rows().items():
         expected = label + " & " + " & ".join(values)
         require_fragment(tex, expected, path.name)
@@ -377,7 +389,7 @@ def external_toolchain_expected_rows() -> dict[
 
 
 def verify_external_toolchain_table(path: Path) -> None:
-    tex = compact(path.read_text(encoding="utf-8"))
+    tex = compact(read_source(path))
     for label, (langchain, neo4j) in external_toolchain_expected_rows().items():
         start = tex.find(label)
         require(start >= 0, f"{path.name}: missing {label}")
@@ -418,7 +430,7 @@ def verify_external_toolchain_table(path: Path) -> None:
 
 
 def verify_response_k5() -> None:
-    tex = compact((ROOT / "paper" / "response.tex").read_text(encoding="utf-8"))
+    tex = compact(read_source(ROOT / "paper" / "response.tex"))
     pairs = load_json("reports/cross_run/k5_model_size.json")["pairs"]
     labels = {
         "Qwen3-8B vs Qwen3-14B": "Qwen 8B--14B",
@@ -438,7 +450,7 @@ def verify_response_k5() -> None:
 def verify_magnitude_text() -> None:
     main = compact((ROOT / "paper" / "main.tex").read_text(encoding="utf-8"))
     response = compact(
-        (ROOT / "paper" / "response.tex").read_text(encoding="utf-8")
+        read_source(ROOT / "paper" / "response.tex")
     )
     artifacts = {
         corpus: load_json(f"reports/cross_run/magnitude_{run}.json")
@@ -516,7 +528,7 @@ def verify_rq9_text() -> None:
 
     main = compact((ROOT / "paper" / "main.tex").read_text(encoding="utf-8"))
     response = compact(
-        (ROOT / "paper" / "response.tex").read_text(encoding="utf-8")
+        read_source(ROOT / "paper" / "response.tex")
     )
     readme = compact((ROOT / "README.md").read_text(encoding="utf-8"))
     for fragment in (

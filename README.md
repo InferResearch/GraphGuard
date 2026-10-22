@@ -69,6 +69,8 @@ Three files provide the main evidence index:
 
 Git keeps the scripts, configurations, dependency lockfile, data checksums, result reports, sanitized checkpoints, and figure assets. Credentials, downloaded corpora, local databases, caches, logs, and manuscript files are ignored; the setup steps below recreate the required local inputs.
 
+Local runs use `data/processed/runs/<run-name>/<run-name>.db`; append-only checkpoints for controlled magnitude and cross-document extraction live alongside `runs/`. See [`data/processed/README.md`](data/processed/README.md) for the storage layout. Canonical figure PDFs and their PNG previews live only in `assets/figures/`.
+
 ## Result-to-script map
 
 | Result family | Main producer or analysis entry point | Canonical output |
@@ -436,6 +438,7 @@ GraphGuard/
 ├── graphguard/        # Contracts, extraction, lineage, metrics, queries, planning
 ├── configs/           # Dataset, schema, prompt, model, and experiment configs
 ├── scripts/           # Experiment, analysis, verification, and figure entry points
+├── tests/             # Unit, regression, and reproducibility tests
 ├── reports/           # Canonical per-run and cross-run result artifacts
 ├── assets/            # Overview image and generated figure previews
 └── data/              # Local raw corpora, caches, and lineage databases

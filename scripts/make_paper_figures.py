@@ -399,14 +399,16 @@ def make_strict_vs_soft() -> None:
             ax.bar(xs, vals, w, color=fills[k], edgecolor=edges[k],
                    linewidth=0.8, label=f"L{k+1}", yerr=errs,
                    error_kw=dict(ecolor=edges[k], elinewidth=0.8, capsize=1.2))
-            label_lift = 0.012 * (k % 2)
+            # Keep each value close to its own CI, with a small horizontal
+            # spread so neighbouring labels remain distinct at column width.
             for xi, v, e in zip(xs, vals, errs):
-                ax.text(xi, v + e + 0.014 + label_lift, f"{v:.2f}",
-                        ha="center", va="bottom", fontsize=5.0,
-                        color=_S.BLACK)
+                ax.annotate(f"{v:.2f}", xy=(xi, v + e),
+                            xytext=((k - 1) * 3.0, 2.0),
+                            textcoords="offset points", ha="center",
+                            va="bottom", fontsize=5.0, color=_S.BLACK)
         ax.set_ylabel("Rate")
         ax.set_title(title, loc="left", pad=3)
-        ax.set_ylim(0, 1.08)
+        ax.set_ylim(0, 1.25)
         ax.set_yticks([0, 0.5, 1.0])
         _S.despine(ax)
         ax.spines["left"].set_linewidth(0.7)
@@ -659,8 +661,9 @@ def make_noise_floor_figure():
                     ha="center", va="bottom", fontsize=5.5, color=_BLACK)
 
         ax.axhline(D0, color=floor_line, lw=1.0, ls="--")
-        ax.text(0.04, 0.96, rf"$D_0$={D0:.2f}", transform=ax.transAxes,
-                ha="left", va="top", fontsize=5.5, color=floor_line)
+        ax.text(1.0, 0.98, "$D_0$\n" + f"{D0:.2f}".removeprefix("0"),
+                transform=ax.get_xaxis_transform(), ha="center", va="top",
+                fontsize=5.5, linespacing=1.0, color=floor_line)
         ax.set_xticks(x)
         ax.set_xticklabels([FAMILY_LABELS[f] for f in ORDER],
                            fontsize=5.2, rotation=35, ha="right")

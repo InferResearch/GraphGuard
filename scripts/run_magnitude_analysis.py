@@ -1403,9 +1403,9 @@ def make_figure(results: dict[str, dict], output: Path) -> None:
             ]
             slope_label = f"{family[0].upper()} {slope:+.4f}"
             slope_label = slope_label.replace("+0.", "+.").replace("-0.", "-.")
-            label_y = 0.95 - 0.13 * series_index
-            if result["corpus_label"] == "SciERC" and family == "evidence":
-                label_y = 0.40
+            label_y = 0.95 - 0.18 * series_index
+            if family == "evidence":
+                label_y = 0.65 if result["corpus_label"] == "BC5CDR" else 0.35
             ax.text(
                 0.04,
                 label_y,

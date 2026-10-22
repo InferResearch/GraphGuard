@@ -86,6 +86,7 @@ def export_pdf_and_png(fig, path: Path, *, dpi: int = 300, **kwargs) -> None:
     kwargs.setdefault("bbox_inches", "tight")
     kwargs.setdefault("pad_inches", 0.025)
     kwargs.setdefault("facecolor", fig.get_facecolor())
+    _ensure_paper_label_sizes(fig, kwargs)
     fig.savefig(path, dpi=dpi, **kwargs)
     if path.suffix.lower() == ".pdf":
         preview = path.with_suffix(".png")
@@ -93,6 +94,41 @@ def export_pdf_and_png(fig, path: Path, *, dpi: int = 300, **kwargs) -> None:
         print(f"  wrote {path} and {preview}")
     else:
         print(f"  wrote {path}")
+
+
+def _ensure_paper_label_sizes(fig, save_options: dict) -> None:
+    """Keep ordinary labels at least 6 pt after single-column placement.
+
+    The PVLDB sigconf column is 240.25 PDF points wide. Tight cropping can
+    widen a nominal 3.5-inch canvas, so the declared Matplotlib size alone is
+    not the size seen in print. Recompute the crop as labels grow. This only
+    changes typography, never data, coordinates, axes, or uncertainty bands.
+    """
+    from matplotlib.text import Text
+
+    column_width_pt = 240.25
+    minimum_print_pt = 6.05
+    for _ in range(12):
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        if save_options.get("bbox_inches") == "tight":
+            bbox = fig.get_tightbbox(
+                renderer,
+                bbox_extra_artists=save_options.get("bbox_extra_artists"),
+            )
+            width_inches = bbox.width + 2 * save_options["pad_inches"]
+        else:
+            width_inches = fig.get_figwidth()
+        minimum_source_pt = minimum_print_pt * width_inches * 72 / column_width_pt
+        changed = False
+        for label in fig.findobj(match=Text):
+            if label.get_visible() and label.get_text().strip():
+                if label.get_fontsize() + 0.001 < minimum_source_pt:
+                    label.set_fontsize(minimum_source_pt)
+                    changed = True
+        if not changed:
+            return
+    raise RuntimeError("Could not stabilize minimum paper label size")
 
 
 def save_fig(fig, path: Path, *, dpi: int = 300, pad: float = 0.4) -> None:

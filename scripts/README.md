@@ -1,7 +1,6 @@
 # Scripts
 
 Operational entry points for the GraphGuard pipeline, grouped by stage.
-Anything not listed here has been retired.
 
 ## End-to-end driver
 - `run_paper_experiment.py` — orchestrator for a single paper run; drives the
@@ -18,14 +17,14 @@ Anything not listed here has been retired.
 - `run_contracts.py` — evaluate the drift-contract catalogue on a run.
 
 ## Cross-run analyses (write `reports/cross_run/*.json`)
-- `aggregate_cross_run.py` — pool per-corpus runs into the cross-run summary.
+- `aggregate_cross_run.py` — pool per-corpus runs into the JSON/Markdown
+  cross-run summary. Figure generation is handled by `make_paper_figures.py`.
 - `run_diagnostic_queries.py` — evaluate canonical graph-wide diagnostics
   D1–D5 on every authoritative materialized pair and compute document-cluster
   bootstrap CIs.
 - `compute_amp_ci.py` — compact the canonical D1–D5 artifacts for paper
   figures and the human-readable amplification table.
 - `run_k5_cross_model.py` — cross-model recall-stability contract.
-- `run_graph_vs_query_ablation.py` — query-aware vs graph-only contract ablation.
 - `run_endpoint_reuse_analysis.py` — compare independent per-contract
   materialization with the unique endpoint-union plan, using both calls and
   observed token volume on the four primary runs.
@@ -112,7 +111,9 @@ Anything not listed here has been retired.
 - `verify_manuscript_artifacts.py` — final-mile checker for the private,
   git-ignored manuscript: validates all 13 figure copies, the active
   source-backed tables, and the RQ9 statements shared by `main.tex`,
-  `response.tex`, and the root README.
+  the archived revision response, and the root README. It reads the historical
+  response from the private `paper/archives/revision.zip` when `response.tex`
+  is no longer in the active CRC tree.
 - `sync_paper_figures.py` — checks the 13 `assets/figures` ↔ `paper/figures`
   pairs byte-for-byte; `--write` performs the explicit copy.
 - `make_paper_figures.py` — entry point for seven paper figures (cross-run
@@ -133,10 +134,6 @@ figures are vector PDFs with matching PNG previews for the root README.
 `verify_manuscript_artifacts.py` still includes it in the canonical-asset hash
 check.
 
-## Tools
-- `visualize_contracts.py` — ad-hoc per-run contract plots.
-- `heartbeat.py` — long-run progress monitor for background extractions.
-
 ## Conventions
 All Python scripts assume the repo root is on `PYTHONPATH` and read inputs from
 `reports/cross_run/` and `data/processed/runs/`; paper PDFs and README PNG
@@ -144,3 +141,7 @@ previews land in `assets/figures/`. Run `python scripts/sync_paper_figures.py --
 `paper/build.sh`, then run `python scripts/verify_manuscript_artifacts.py`.
 The reported Kuzu workload uses the exact dependency pin `kuzu==0.11.3` from
 `pyproject.toml`.
+
+The result-to-script map and complete run commands are in the root
+[`README.md`](../README.md). Local database and checkpoint locations are
+documented in [`data/processed/README.md`](../data/processed/README.md).
